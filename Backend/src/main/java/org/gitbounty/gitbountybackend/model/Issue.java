@@ -27,7 +27,7 @@ public class Issue {
 
     @ManyToOne
     @JoinColumn(name = "repository_id", nullable = false)
-    private GitRepository repository;
+    private Codebase repository;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -53,8 +53,8 @@ public class Issue {
     public void setAuthor(User author) { this.author = author; }
 
     // those as well has to be uncommented after implementing the repository entity
-    public GitRepository getRepository() { return repository; }
-    public void setRepository(GitRepository repository) { this.repository = repository; }
+    public Codebase getRepository() { return repository; }
+    public void setRepository(Codebase repository) { this.repository = repository; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

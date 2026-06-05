@@ -1,5 +1,6 @@
 package org.gitbounty.gitbountybackend.model;
 
+import org.aspectj.apache.bcel.classfile.Code;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -30,14 +31,15 @@ public class IssueJPATests {
         return entityManager.persist(author);
     }
 
-    private GitRepository createAndPersistTestRepository() {
-        GitRepository repo = new GitRepository();
+    private Codebase createAndPersistTestRepository(User owner) {
+        Codebase repo = new Codebase();
         repo.setName("gitbounty-core-" + System.currentTimeMillis());
-        repo.setUrl("https://github.com/gitbounty/core");
+        repo.setGitUrl("https://github.com/gitbounty/core");
+        repo.setOwner(owner);
         return entityManager.persist(repo);
     }
 
-    private Issue createValidBaseIssue(User author, GitRepository repo) {
+    private Issue createValidBaseIssue(User author, Codebase repo) {
         Issue issue = new Issue();
         issue.setTitle("Fix UI Alignment");
         issue.setDescription("The sidebar overlaps the dashboard main menu container.");
@@ -51,7 +53,7 @@ public class IssueJPATests {
     @Test
     public void shouldGenerateIdAutomaticallyOnSave() {
         User author = createAndPersistTestAuthor();
-        GitRepository repo = createAndPersistTestRepository();
+        Codebase repo = createAndPersistTestRepository(author);
         Issue issue = createValidBaseIssue(author, repo);
 
         assertNull(issue.getId(), "ID must be null before database persistence");
@@ -65,7 +67,7 @@ public class IssueJPATests {
     @Test
     public void shouldSaveAndRetrieveAllFieldsCorrectly() {
         User author = createAndPersistTestAuthor();
-        GitRepository repo = createAndPersistTestRepository();
+        Codebase repo = createAndPersistTestRepository(author);
         Issue issue = createValidBaseIssue(author, repo);
 
         Issue savedIssue = entityManager.persistFlushFind(issue);
@@ -84,7 +86,7 @@ public class IssueJPATests {
     @Test
     public void shouldThrowExceptionWhenTitleIsNull() {
         User author = createAndPersistTestAuthor();
-        GitRepository repo = createAndPersistTestRepository();
+        Codebase repo = createAndPersistTestRepository(author);
         Issue issue = createValidBaseIssue(author, repo);
 
         issue.setTitle(null);
@@ -97,7 +99,7 @@ public class IssueJPATests {
     @Test
     public void shouldApplyDefaultStatusOfOpen() {
         User author = createAndPersistTestAuthor();
-        GitRepository repo = createAndPersistTestRepository();
+        Codebase repo = createAndPersistTestRepository(author);
         Issue issue = createValidBaseIssue(author, repo);
 
         Issue savedIssue = entityManager.persistFlushFind(issue);
@@ -109,7 +111,9 @@ public class IssueJPATests {
 
     @Test
     public void shouldThrowExceptionWhenAuthorIsNull() {
-        GitRepository repo = createAndPersistTestRepository();
+        User owner = createAndPersistTestAuthor();
+        Codebase repo = createAndPersistTestRepository(owner);
+
         Issue issue = createValidBaseIssue(null, repo);
         issue.setAuthor(null);
 
@@ -134,7 +138,7 @@ public class IssueJPATests {
     @Test
     public void shouldPopulateTimestampsAutomaticallyOnCreate() {
         User author = createAndPersistTestAuthor();
-        GitRepository repo = createAndPersistTestRepository();
+        Codebase repo = createAndPersistTestRepository(author);
         Issue issue = createValidBaseIssue(author, repo);
 
         assertNull(issue.getCreatedAt());
@@ -152,7 +156,7 @@ public class IssueJPATests {
     @Test
     public void shouldAdvanceUpdatedAtTimestampOnUpdate() throws InterruptedException {
         User author = createAndPersistTestAuthor();
-        GitRepository repo = createAndPersistTestRepository();
+        Codebase repo = createAndPersistTestRepository(author);
         Issue issue = createValidBaseIssue(author, repo);
 
         Issue savedIssue = entityManager.persistFlushFind(issue);
@@ -202,7 +206,7 @@ public class IssueJPATests {
     @Test
     public void shouldStrictlyCoverRepositoryGetterAndSetter() {
         Issue issue = new Issue();
-        GitRepository mockRepo = new GitRepository();
+        Codebase mockRepo = new Codebase();
         mockRepo.setName("pure_test_repo");
 
         issue.setRepository(mockRepo);
