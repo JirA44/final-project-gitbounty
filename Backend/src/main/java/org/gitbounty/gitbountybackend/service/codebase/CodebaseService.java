@@ -4,27 +4,27 @@ import java.security.Principal;
 
 import org.gitbounty.gitbountybackend.model.Codebase;
 import org.gitbounty.gitbountybackend.model.User;
-import org.gitbounty.gitbountybackend.repository.CodebaseRepository;
-import org.gitbounty.gitbountybackend.repository.UserRepository;
+import org.gitbounty.gitbountybackend.service.User.UserService;
+import org.gitbounty.gitbountybackend.service.codebase.storage.CodebaseStorageService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class CodebaseService {
 
     private final CodebaseRepository codebaseRepository;
-    private final UserRepository userRepository;
     private final CodebaseStorageService codebaseStorageService;
+    private final UserService userService;
 
-    public CodebaseService(
+    CodebaseService(
         CodebaseRepository codebaseRepository,
-        UserRepository userRepository,
-        CodebaseStorageService codebaseStorageService
-    ) {
+        CodebaseStorageService codebaseStorageService,
+        UserService userService) {
         this.codebaseRepository = codebaseRepository;
-        this.userRepository = userRepository;
         this.codebaseStorageService = codebaseStorageService;
+        this.userService = userService;
     }
 
     public Codebase createCodebase(String name, String description, String gitUrl, Principal principal) {
@@ -51,12 +51,22 @@ public class CodebaseService {
         }
     }
 
+    public Codebase getCodebase(String repositoryName) {
+        String normalizedRepositoryName = normalizeRepositoryName(repositoryName);
+
+        return codebaseRepository.findByName(normalizedRepositoryName)
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Repository not found: " + normalizedRepositoryName
+            ));
+    }
+
     private User resolveOwner(Principal principal) {
         if (principal == null || principal.getName() == null || principal.getName().isBlank()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication is required");
         }
 
-        return userRepository.findByUsername(principal.getName())
+        return userService.findByUsername(principal.getName())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authenticated user not found"));
     }
 
@@ -74,6 +84,10 @@ public class CodebaseService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Repository name must not contain path separators");
         }
 
+        if(trimmedName.contains(".git")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Repository name must not contain .git");
+        }
+
         return trimmedName;
     }
 
@@ -81,12 +95,13 @@ public class CodebaseService {
         return description == null ? null : description.trim();
     }
 
+    @Transactional
     public void deleteCodebase(String name) {
         String repositoryName = normalizeRepositoryName(name);
+        codebaseStorageService.deleteRepository(repositoryName);
 
         // remove database record if present
         codebaseRepository.findByName(repositoryName).ifPresent(codebaseRepository::delete);
-        codebaseStorageService.deleteRepository(repositoryName);
     }
 
 }

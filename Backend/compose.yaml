@@ -11,7 +11,7 @@ services:
     environment:
       - SPRING_APPLICATION_NAME=Backend
       - SPRING_PROFILES_ACTIVE=dev
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/gitbounty_dev
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/gitbounty
       - SPRING_DATASOURCE_USERNAME=dev_user
       - SPRING_DATASOURCE_PASSWORD=dev_password
       - SPRING_FLYWAY_USER=root
@@ -31,13 +31,18 @@ services:
           action: rebuild
     networks:
       - gitbounty-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/health" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   mysql:
     image: mysql:8.0
     container_name: gitbounty-mysql
     environment:
       MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: gitbounty_dev
+      MYSQL_DATABASE: gitbounty
       MYSQL_USER: dev_user
       MYSQL_PASSWORD: dev_password
     ports:
@@ -60,7 +65,7 @@ services:
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
-      - KC_DB_URL=jdbc:mysql://mysql:3306/keycloak_dev?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      - KC_DB_URL=jdbc:mysql://mysql:3306/keycloak?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
       - KC_DB_USERNAME=keycloak_user
       - KC_DB_PASSWORD=keycloak_password
       - KC_HEALTH_ENABLED=true
@@ -74,6 +79,20 @@ services:
     networks:
       - gitbounty-network
 
+  nginx:
+    image: nginx:alpine
+    container_name: gitbounty-proxy
+    ports:
+      - "80:80"   # Handles the HTTP connection to force a redirect
+      - "443:443" # Opens public HTTPS secure line
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      backend:
+          condition: service_healthy
+    networks:
+        - gitbounty-network
 volumes:
   mysql-data:
 
