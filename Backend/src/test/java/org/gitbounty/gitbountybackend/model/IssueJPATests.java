@@ -26,8 +26,11 @@ public class IssueJPATests {
     private User createAndPersistTestAuthor() {
         User author = new User();
         long timestamp = System.currentTimeMillis();
+
         author.setUsername("tester_" + timestamp);
         author.setEmail("tester_" + timestamp + "@gitbounty.com");
+        author.setKeycloakId("keycloak_" + timestamp);
+
         return entityManager.persist(author);
     }
 
