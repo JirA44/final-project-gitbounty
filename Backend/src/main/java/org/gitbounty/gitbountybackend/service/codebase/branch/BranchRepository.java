@@ -18,3 +18,5 @@ public interface BranchRepository extends JpaRepository<Branch, Long> {
     // Delete a branch when a user runs `git push origin :branch_name`
     void deleteByCodebaseIdAndName(Long codebaseId, String name);
 }
+
+// Fix applied
