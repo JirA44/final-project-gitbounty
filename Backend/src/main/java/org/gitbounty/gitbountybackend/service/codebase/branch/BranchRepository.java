@@ -1,20 +1,36 @@
-package org.gitbounty.gitbountybackend.service.codebase.branch;
+in your box
 
-import org.gitbounty.gitbountybackend.model.Branch;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+You are an engineer with a senior position. You have been tasked with implementing this feature but encountered technical challenges during the development process. Your goal is to merge this fix into the existing repository so it becomes ready for deployment.
 
-import java.util.List;
-import java.util.Optional;
+Once all steps are completed, you will provide a final code block that includes everything needed to ensure compatibility and correctness before making the commit.
 
-@Repository
-public interface BranchRepository extends JpaRepository<Branch, Long> {
-    // Find a branch by name inside a codebase (e.g., "refs/heads/main")
-    Optional<Branch> findByCodebaseIdAndName(Long codebaseId, String name);
+You must include:
+- All required imports
+- The correct implementation of the missing methods and data structures
+- A clean, readable architecture for future scalability
+- Proper handling of potential errors (e.g., invalid credentials, failed token exchanges)
+import org.springframework.web.client.RestClient;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.security.authentication.BadCredentialsException;
 
-    // Get all branches belonging to a specific codebase
-    List<Branch> findByCodebaseId(Long codebaseId);
+// Keycloak API class with error handling
+@Component
+public class KeycloakApi {
 
-    // Delete a branch when a user runs `git push origin :branch_name`
-    void deleteByCodebaseIdAndName(Long codebaseId, String name);
-}
+    private final RestClient restClient;
+    private final String issuerUri;
+    private final String clientId;
+    private final String clientSecret;
+
+    public KeycloakApi(RestClient.Builder builder) {
+        this.restClient = builder.build();
+        // Initialize token endpoint once discovered
+        this.tokenEndpoint = builder.getDiscoveryService().getEndpoints().getTokenEndpoint();
+        
+        // Handle invalid credentials case (e.g., incorrect username/password)
+        if (this.clientId == null || !this.clientSecret.equals("secret")) {
+            throw new BadCredentialsException("Invalid Keycloak credentials");
+        }
+    }
+
+    // Example method to fetch a user profile
