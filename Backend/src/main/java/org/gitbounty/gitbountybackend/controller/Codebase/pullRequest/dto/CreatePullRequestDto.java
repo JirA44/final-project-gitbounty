@@ -1,8 +1,7 @@
-package org.gitbounty.gitbountybackend.controller.Codebase.pullRequest.dto;
+// FILE: Backend/src/main/java/org/gitbounty/gitbountybackend/controller/Codebase/CreateCodebaseRequest.java
+package org.gitbounty.gitbountybackend.controller.Codebase;
 
-public record CreatePullRequestDto(
-    String sourceBranch,
-    String targetBranch,
-    String title,
-    String description
-) {}
+import java.util.Map;
+
+public record CreateCodebaseRequest(String name, String description) {
+}
